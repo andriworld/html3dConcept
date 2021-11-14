@@ -6,6 +6,7 @@ import { CSS3DRenderer, CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRe
 let camera, scene, renderer;
 
 const frustumSize = 500;
+const CAMERA_DISTANCE = 100;
 
 window.onload = function() {
   console.log('onload')
@@ -110,20 +111,22 @@ function init() {
 
   function focusCamera(targetObject) {
   
-    const targetPosition = new THREE.Vector3(0,0,0)
-    const targetRotation = new THREE.Quaternion()
-    targetObject.getWorldPosition(targetPosition)
-    targetObject.getWorldQuaternion(targetRotation)
-    const normal = new THREE.Vector3(0,0,100).applyQuaternion(targetRotation)
-    const position = targetPosition.clone().add(normal)
-    const rotation = new THREE.Euler().setFromQuaternion( targetRotation, 'XYZ' )
-    const target = targetPosition
+    const targetObjectPosition = new THREE.Vector3(0,0,0)
+    const targetObjectRotationQuaternion = new THREE.Quaternion()
+    targetObject.getWorldPosition(targetObjectPosition)
+    targetObject.getWorldQuaternion(targetObjectRotationQuaternion)
+    
+    const normal = new THREE.Vector3(0,0,CAMERA_DISTANCE).applyQuaternion(targetObjectRotationQuaternion)
+
+    const toCameraPosition = targetObjectPosition.clone().add(normal)
+    const toCameraRotation = new THREE.Euler().setFromQuaternion( targetObjectRotationQuaternion, 'XYZ' )
+    const toCameraTargetPosition = targetObjectPosition
 
     new TWEEN.Tween( camera.position )
         .to( {
-            x: position.x,
-            y: position.y,
-            z: position.z
+            x: toCameraPosition.x,
+            y: toCameraPosition.y,
+            z: toCameraPosition.z
         }, 3000 )
         .easing( TWEEN.Easing.Linear.None ).onUpdate( function () {
 
@@ -144,9 +147,9 @@ function init() {
         .to(
           // rotation
           {
-            x: rotation.x,
-            y: rotation.y,
-            z: rotation.z,
+            x: toCameraRotation.x,
+            y: toCameraRotation.y,
+            z: toCameraRotation.z,
         }
         , 3000 )
         .easing( TWEEN.Easing.Linear.None ).onUpdate( function () {
@@ -161,9 +164,9 @@ function init() {
 
     new TWEEN.Tween( camera.target )
         .to( {
-            x: target.x,
-            y: target.y,
-            z: target.z
+            x: toCameraTargetPosition.x,
+            y: toCameraTargetPosition.y,
+            z: toCameraTargetPosition.z
         } , 3000)
         .easing( TWEEN.Easing.Linear.None )
         .onUpdate( function () {
@@ -172,7 +175,7 @@ function init() {
         .onComplete( function () {
 
             // camera.lookAt( target );
-            camera.rotation.set(rotation)
+            camera.rotation.set(toCameraRotation)
 
         } )
         .start();
